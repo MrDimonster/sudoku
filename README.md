@@ -1,1 +1,1 @@
-# sudoku js only extra fast gen
+# sudoku js only extra fast gen!
