@@ -36,8 +36,18 @@ table.sudokuTable tbody td {
 </style>
 </head>
 <body>
+<div>
+	<span>Mode:</span>&nbsp;
+	<select id="mode" name="mode">
+		<option value="20">very easy</option>
+		<option value="40">easy</option>
+		<option value="50">normal</option>
+		<option value="60">hard</option>
+	</select>
+	&nbsp;<button id="generateBtn">Generate</button>
+</div>
 <div id="res"></div>
-<div id="nums" style="margin-top:20px;">
+<div id="nums" style="margin-top:20px; display: none;">
  <table class="sudokuTable">
   <tr>
    <td><a class="btn">1</a></td>
@@ -62,6 +72,9 @@ class Grid {
 	}
 	addCell = (cell) => this.Cells.push(cell);
 	init = () => {
+		this.Cells = [];
+		this.selectedDomCell = null;
+		this.emptyCells = 81;
 		let nums = '123456789456789123789123456234567891567891234891234567345678912678912345912345678';
 		let c = 0;
 		for(let i = 0; i < 9; i++)
@@ -75,12 +88,12 @@ class Grid {
 			html += '<tr>';
 			for(let j = 0; j < 9; j++){
 				let tdClass = 'tdc';
-				if((ind+1)%3==0 && (ind+1)%9!=0) tdClass += ' tdr';
-				if((i+1)%3==0 && (i+1!=9)) tdClass += ' tdb';
+				if((ind + 1)%3 == 0 && (ind + 1)%9 != 0) tdClass += ' tdr';
+				if((i + 1)%3 == 0 && (i + 1 != 9)) tdClass += ' tdb';
 				let cell = this.Cells[ind++];
 				if(cell.isEditable) tdClass +=' editable';
 				else tdClass +=' tdh';
-				html += ('<td cellindex="' + (ind-1) + '" class="' + tdClass + '">' 
+				html += ('<td cellindex="' + (ind - 1) + '" class="' + tdClass + '">' 
 					+ cell.draw() + '</td>');
 			}
 			html += '</tr>';
@@ -111,7 +124,7 @@ class Grid {
 		return {i : r1, j : r2};
 	}
 	rowSwap = (v) => {
-		let s = v||this.rowColRandomSwapIndexes();
+		let s = v || this.rowColRandomSwapIndexes();
 		let r1 = s.i;
 		let r2 = s.j;
 		
@@ -155,7 +168,7 @@ class Grid {
 		}
 	}
 	randomSwap = (c) => {
-		let cnt = c || 10;
+		let cnt = c || 20;
 		for(let i = 0; i < cnt; i++){
 			let method = Math.floor(Math.random()*4);
 			if(method == 0) this.rowSwap();
@@ -210,8 +223,8 @@ class Grid {
 		return true;
 	}
 	
-	hideNums = () => {	
-		let todelete = 5;
+	hideNums = (d) => {	
+		let todelete = d;
 		let deleted = 0;
 		this.emptyCells = 0;
 		while(deleted < todelete){
@@ -225,48 +238,11 @@ class Grid {
 			}
 		}
 	}
-	
-	bindEvents(){
-		let cells = document.querySelectorAll('.editable');
-		for(let i = 0; i < cells.length; i++){
-			let cell = cells[i];
-			cell.addEventListener('click', this.onClickGenerate);
-		}
-	 
-		let btns = document.querySelectorAll('.btn');
-		for(let i = 0; i < btns.length; i++){
-			let btn = btns[i];
-			btn.addEventListener('click', this.onClickGenerateBtn);
-		}
-	}
-	
-	onClickGenerate(e){
-		let cells = document.querySelectorAll('.editable');
-		for(let i = 0; i < cells.length; i++){
-			let cell = cells[i];
-			cell.classList.remove("selected");
-		}
-		e.target.classList.add("selected");
-		grid.setE(e.target);
-	}
-	
+ 
 	setE(ee){
 		this.selectedDomCell = ee;	
 	}
-	
-	onClickGenerateBtn(e){
-		if(grid.selectedDomCell){
-			grid.selectedDomCell.innerHTML = e.target.innerHTML;
-			let index = (grid.selectedDomCell.getAttribute('cellindex'));
-			let cell = grid.getCell(index);
-			cell.userV = e.target.innerHTML + '';
-			grid.emptyCells--;
-			if(grid.emptyCells < 0) grid.emptyCells = 0;
-			if(grid.emptyCells == 0){
-				let v = grid.isvalid(true);
-			}
-		}
-	}
+ 
 	getCell = (index) => {
 		return this.Cells[index];
 	}
@@ -287,12 +263,76 @@ class Cell{
 }
 //var intSequence = (start, finish) => new Array(1 + finish - start).fill(0).map((_, i) => i + start );		  
 var grid = new Grid();
-grid.init();
-grid.randomSwap();
-grid.hideNums();
-grid.draw('res');
-var isvalid = grid.isvalid();
-grid.bindEvents();
+
+function unbindEvents() {
+	let cells = document.querySelectorAll('.editable');
+	for(let i = 0; i < cells.length; i++){
+		let cell = cells[i];
+		cell.removeEventListener('click', cellClick);
+	}
+	let btns = document.querySelectorAll('.btn');
+	for(let i = 0; i < btns.length; i++){
+		let btn = btns[i];
+		btn.removeEventListener('click', btnClick);
+	}
+}
+
+var cellClick = function(e){
+	let cells = document.querySelectorAll('.editable');
+	for(let i = 0; i < cells.length; i++){
+		let cell = cells[i];
+		cell.classList.remove("selected");
+	}
+	e.target.classList.add("selected");
+	grid.setE(e.target);
+}
+
+var btnClick = function(e){
+	if(grid.selectedDomCell){
+		grid.selectedDomCell.innerHTML = e.target.innerHTML;
+		let index = (grid.selectedDomCell.getAttribute('cellindex'));
+		let cell = grid.getCell(index);
+		cell.userV = e.target.innerHTML + '';
+		grid.emptyCells--;
+		if(grid.emptyCells < 0) grid.emptyCells = 0;
+		if(grid.emptyCells == 0){
+			let v = grid.isvalid(true);
+		}
+	}
+}
+
+function gridEvents(){
+	let cells = document.querySelectorAll('.editable');
+	for(let i = 0; i < cells.length; i++){
+		let cell = cells[i];
+		cell.addEventListener('click', cellClick);
+	}	
+} 
+
+function keyBoardEvents(){
+	let btns = document.querySelectorAll('.btn');
+	for(let i = 0; i < btns.length; i++){
+		let btn = btns[i];
+		btn.addEventListener('click', btnClick);
+	}
+}
+
+function generateBtnEvent(){
+	let g = document.querySelectorAll('#generateBtn');
+	g[0].addEventListener('click', function(e){
+		let modeVal = document.getElementById('mode').value;
+		grid.init();
+		grid.randomSwap();
+		grid.hideNums(parseInt(modeVal));
+		grid.draw('res');
+		document.getElementById('nums').style.display = 'block';
+		unbindEvents();
+		gridEvents();
+		keyBoardEvents();
+	});
+}
+
+generateBtnEvent();
 </script>
 </body>
 </html>
