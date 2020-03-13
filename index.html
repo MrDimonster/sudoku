@@ -61,6 +61,8 @@ table.sudokuTable tbody td {
    <td><a class="btn">9</a></td> 
   </tr>
  </table>
+ <br> cell click - select<br>
+ cell double click - clear
 </div>
 
 <script>
@@ -269,6 +271,7 @@ function unbindEvents() {
 	for(let i = 0; i < cells.length; i++){
 		let cell = cells[i];
 		cell.removeEventListener('click', cellClick);
+		cell.removeEventListener('dblclick', cellDblClick);
 	}
 	let btns = document.querySelectorAll('.btn');
 	for(let i = 0; i < btns.length; i++){
@@ -301,11 +304,23 @@ var btnClick = function(e){
 	}
 }
 
+var cellDblClick = function(e){
+	if(grid.selectedDomCell){
+		let text = grid.selectedDomCell.innerHTML;
+		grid.selectedDomCell.innerHTML = '';
+		let index = (grid.selectedDomCell.getAttribute('cellindex'));
+		let cell = grid.getCell(index);
+		cell.userV = '';
+		if(parseInt(text) > 0) grid.emptyCells++;
+	}
+}
+
 function gridEvents(){
 	let cells = document.querySelectorAll('.editable');
 	for(let i = 0; i < cells.length; i++){
 		let cell = cells[i];
 		cell.addEventListener('click', cellClick);
+		cell.addEventListener('dblclick', cellDblClick);
 	}	
 } 
 
